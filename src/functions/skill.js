@@ -3,13 +3,22 @@ const {mappings} = require( '../mappings' );
 const {skills} = require( '../skills' );
 
 exports.handler = function(event, context, callback) {
-  const textParser = new RegExp("^(?<skill>\\w*)\\s?(?<check>\\((?<level>\\w*),\\s(?<status>\\w*)\\)|check)?\\s?(?<text>.*)?$");
+  const textParser = /^(\w*)\s?(\((\w*),\s(\w*)\)|check)?\s?(.*)?$/;
   const baseURL = process.env.URL;
 
   const params = new URLSearchParams(event.body);
   const query = params.get('text')
 
-  const {groups} = textParser.exec(query);
+  const parsed = textParser.exec(query);
+
+  const groups = {
+    skill: parsed[1],
+    check: parsed[2],
+    level: parsed[3],
+    status: parsed[4],
+    text: parsed[5]
+  }
+
   const skill = mappings.shortcuts[ groups.skill ] || groups.skill;
 
   const [ability] = Object.entries(mappings.ability).map(([key, value]) => {
