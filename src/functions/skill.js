@@ -2,10 +2,10 @@ const {URLSearchParams} = require( 'url' );
 const {mappings} = require( '../mappings' );
 const {skills} = require( '../skills' );
 
-const textParser = /^(?<skill>\w*)\s?(?<check>(\((?<level>\w*),\s(?<status>\w*)\))|check)?\s?(?<text>.*)?$/;
-const baseURL = process.env.URL;
-
 exports.handler = function(event, context, callback) {
+  const textParser = /^(?<skill>\w*)\s?(?<check>(\((?<level>\w*),\s(?<status>\w*)\))|check)?\s?(?<text>.*)?$/;
+  const baseURL = process.env.URL;
+
   const params = new URLSearchParams(event.body);
   const query = params.get('text')
 
