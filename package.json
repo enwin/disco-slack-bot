@@ -1,0 +1,21 @@
+{
+  "name": "disco-slack-bot",
+  "version": "0.1.0-0",
+  "description": "",
+  "main": "",
+  "dependencies": {},
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/enwin/disco-slack-bot.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/enwin/disco-slack-bot/issues"
+  },
+  "homepage": "https://github.com/enwin/disco-slack-bot#readme"
+}
