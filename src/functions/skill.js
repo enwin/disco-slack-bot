@@ -4,44 +4,44 @@ const {skills} = require( '../skills' );
 const https = require('https');
 const url = require('url');
 
-const slackEndpoint = url.parse(process.env.SLACK_HOOK);
+exports.handler = async function(event, context, callback) {
+  const slackEndpoint = url.parse(process.env.SLACK_HOOK);
 
-const send = (data) => {
-  const options = {
-    hostname: slackEndpoint.hostname,
-    port: 443,
-    path: slackEndpoint.path,
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Content-Length': data.length
+  const send = (data) => {
+    const options = {
+      hostname: slackEndpoint.hostname,
+      port: 443,
+      path: slackEndpoint.path,
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Content-Length': data.length
+      }
     }
+
+    return new Promise((resolve, reject) => {
+      const req = https.request(options, function (res) {
+        let chunks = [];
+
+        res.on("data", (chunk) => {
+          chunks.push(chunk);
+        });
+
+        res.on("error", (error)  =>{
+          reject( error );
+        });
+
+        res.on("end", ()  =>{
+          var body = Buffer.concat(chunks);
+          resolve(body.toString());
+        });
+      });
+
+      req.write(data);
+      req.end();
+    });
   }
 
-  return new Promise((resolve, reject) => {
-    const req = https.request(options, function (res) {
-      let chunks = [];
-
-      res.on("data", (chunk) => {
-        chunks.push(chunk);
-      });
-
-      res.on("error", (error)  =>{
-        reject( error );
-      });
-
-      res.on("end", ()  =>{
-        var body = Buffer.concat(chunks);
-        resolve(body.toString());
-      });
-    });
-
-    req.write(data);
-    req.end();
-  });
-}
-
-exports.handler = async function(event, context, callback) {
   const textParser = /^(?<skill>\w*)\s?(?<check>\((?<level>\w*),\s(?<status>\w*)\)|check)?\s?(?<text>.*)?$/;
   const baseURL = 'https://disco-bot.netlify.com'; //process.env.URL;
 
