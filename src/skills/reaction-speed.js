@@ -1,4 +1,4 @@
-exports.reactionSpeed = {
+exports.reactionspeed = {
   name: 'Reaction speed',
   texts: []
 }
