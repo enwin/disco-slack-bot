@@ -120,7 +120,7 @@ exports.handler = async function(event, context, callback) {
         responseURL: params.get('response_url')
       }
 
-      this.slackEndpoint = url.parse(this.params.responseURL);
+      this.slackEndpoint = url.parse(process.env.SLACK_HOOK);
 
       this.groups = {};
 
