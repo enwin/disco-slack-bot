@@ -53,6 +53,7 @@ exports.handler = async function(event, context, callback) {
       const icon = `${this.baseURL}/assets/skills/${skill}.jpg`;
 
       const message = {
+        response_type: 'in_channel',
         channel: this.params.channelId,
         username: username.join(' '),
         icon_url: icon
