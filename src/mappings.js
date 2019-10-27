@@ -42,6 +42,9 @@ exports.mappings = {
   level: {
     easy: 'Easy',
     medium: 'Medium',
+    challenging: 'Challenging',
+    legendary: 'Legendary',
+    heroic: 'Heroic'
   },
   shortcuts: {
     coordination: 'handEyeCoordination',

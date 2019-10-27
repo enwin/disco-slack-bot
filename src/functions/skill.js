@@ -8,7 +8,7 @@ exports.handler = async function(event, context, callback) {
   const handle = new class Handler {
     constructor(event, context, callback) {
       this.requestBody = event.body;
-      this.baseURL = 'https://disco-bot.netlify.com'; //process.env.URL;
+      this.baseURL = process.env.URL;
 
       this.parse();
 
@@ -25,7 +25,6 @@ exports.handler = async function(event, context, callback) {
       }).filter(Boolean);
 
       const color = mappings.colors[ ability ];
-
       const username = [skills[skill].name.toUpperCase()];
 
       if( this.groups.check ){
@@ -60,23 +59,42 @@ exports.handler = async function(event, context, callback) {
       };
 
       if( this.help ){
-        // message.response_type = 'ephemeral';
-        message.blocks = Object.entries(skills).map(([key, skill]) => {
-          return {
-            type: 'section',
-            text: {
-              type: 'mrkdwn',
-              text: `*${skill.name.toUpperCase()}*\n${skill.description}`
+        message.response_type = 'ephemeral';
+        message.blocks = Object.entries(skills).map(([key, skill], index) => {
+          const entry = [
+            {
+              "type": "divider"
             },
-            accessory: {
-              type: 'image',
-              image_url: `${this.baseURL}/assets/skills/${key}.jpg`,
-              alt_text: skill.name
+            {
+              type: 'section',
+              text: {
+                type: 'mrkdwn',
+                text: `*${skill.name.toUpperCase()}* ( \`\/disco ${key}\`)`
+              }
+            },
+            {
+              type: 'section',
+              text: {
+                type: 'mrkdwn',
+                text: `${skill.description}`
+              },
+              accessory: {
+                type: 'image',
+                image_url: `${this.baseURL}/assets/skills/${key}.jpg`,
+                alt_text: skill.name
+              }
             }
-          };
-        });
+          ];
+          return entry;
+        }).reduce((a, b) => a.concat(b), []);
 
-        message.blocks.splice(1)
+        message.blocks.unshift({
+          type: 'section',
+          text: {
+            type: 'mrkdwn',
+            text: '*Welcome to this gritty world.*\nFrom here you\'ll have to start with a skill and then either a text or a check:\n\n*Command*\n_skill + text_\n`/disco rhetoric are you sure?`\n\n_skill + random check + text_\n`/disco rhetoric check are you sure?`\n\n_skill + check + text_\n`/disco rhetoric (easy, failure) are you sure?`\n\n*Check options*\n`easy`,`medium`,`challenging`,`legenday`,` heroic`\n\n*Status*\n`success`,`failure`'
+          }
+        })
       }
       else {
         message.attachments = [
@@ -94,6 +112,7 @@ exports.handler = async function(event, context, callback) {
       const textParser = /^(?<skill>\w*)\s?(?<check>\((?<level>\w*),\s(?<status>\w*)\)|check)?\s?(?<text>.*)?$/;
 
       const params = new URLSearchParams(this.requestBody);
+
       this.params = {
         query: params.get('text'),
         channelId: params.get('channel_id'),
@@ -121,8 +140,6 @@ exports.handler = async function(event, context, callback) {
 
     async respond() {
       const payload = JSON.stringify(this.message);
-
-      console.log(JSON.stringify(this.message, null, 2))
 
       const response = await this.send(payload)
         .catch(error => {
@@ -173,138 +190,4 @@ exports.handler = async function(event, context, callback) {
   }(event);
 
   return handle.respond();
-
-  const slackEndpoint = url.parse(process.env.SLACK_HOOK);
-
-  const send = (data) => {
-    const options = {
-      hostname: slackEndpoint.hostname,
-      port: 443,
-      path: slackEndpoint.path,
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Content-Length': data.length
-      }
-    }
-
-    return new Promise((resolve, reject) => {
-      const req = https.request(options, function (res) {
-        let chunks = [];
-
-        res.on("data", (chunk) => {
-          chunks.push(chunk);
-        });
-
-        res.on("error", (error)  =>{
-          reject( error );
-        });
-
-        res.on("end", ()  =>{
-          var body = Buffer.concat(chunks);
-          resolve(body.toString());
-        });
-      });
-
-      req.write(data);
-      req.end();
-    });
-  }
-
-  const textParser = /^(?<skill>\w*)\s?(?<check>\((?<level>\w*),\s(?<status>\w*)\)|check)?\s?(?<text>.*)?$/;
-  const baseURL = 'https://disco-bot.netlify.com'; //process.env.URL;
-
-  const params = new URLSearchParams(event.body);
-  const query = params.get('text');
-  const channelId = params.get('channel_id');
-
-  const {groups} = textParser.exec(query);
-
-  const skill = query === 'help' ? 'encyclopedia' : mappings.shortcuts[ groups.skill ] || groups.skill;
-
-  const [ability] = Object.entries(mappings.ability).map(([key, value]) => {
-    if( value.includes( skill ) ){
-      return key;
-    }
-  }).filter(Boolean);
-  const color = mappings.colors[ ability ];
-
-  const username = [skills[skill].name.toUpperCase()]
-
-  if( groups.check ){
-    let status = groups.status;
-    let level = groups.level;
-
-    if( !level ){
-      const levels = Object.keys(mappings.level);
-      level = levels[Math.round(Math.random() * levels.length )];
-    }
-
-    if( !status ){
-      status = Math.round( Math.random()) ? 'failure' : 'success';
-    }
-
-    username.push( `[${mappings.level[level]}: ${mappings.status[status]}]` );
-  }
-
-  let text = groups.text;
-
-  if( !text ){
-    const randomTextIndex = Math.round( Math.random() * (skills[skill].texts.length - 1 ));
-    text = skills[skill].texts[ randomTextIndex ];
-  }
-
-  const icon = `${baseURL}/assets/skills/${skill}.jpg`;
-
-  const message = {
-    channel: channelId,
-    username: username.join(' '),
-    icon_url: icon
-  };
-
-  if( query === 'help' ){
-    message.blocks = [
-      {
-        "type": "section",
-        "text": {
-          "type": "mrkdwn",
-          "text": "Hello, Assistant to the Regional Manager Dwight! *Michael Scott* wants to know where you'd like to take the Paper Company investors to dinner tonight.\n\n *Please select a restaurant:*"
-        }
-      },
-      {
-        "type": "divider"
-      },
-      {
-        "type": "section",
-        "text": {
-          "type": "mrkdwn",
-          "text": "*Farmhouse Thai Cuisine*\n:star::star::star::star: 1528 reviews\n They do have some vegan options, like the roti and curry, plus they have a ton of salad stuff and noodles can be ordered without meat!! They have something for everyone here"
-        },
-        "accessory": {
-          "type": "image",
-          "image_url": "https://s3-media3.fl.yelpcdn.com/bphoto/c7ed05m9lC2EmA3Aruue7A/o.jpg",
-          "alt_text": "alt text for image"
-        }
-      },
-    ];
-  }
-  else {
-    message.attachments = [
-      {
-        color,
-        text,
-      }
-    ]
-  }
-
-  const response = await send(JSON.stringify(message))
-    .catch(error => {
-      console.error( error );
-      return false;
-    });
-
-  return {
-    statusCode: response ? 200 : 500,
-    body: ''
-  };
 }
