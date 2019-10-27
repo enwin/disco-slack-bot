@@ -114,6 +114,8 @@ exports.handler = async function(event, context, callback) {
 
       const params = new URLSearchParams(this.requestBody);
 
+      console.log(this.requestBody)
+
       this.params = {
         query: params.get('text'),
         channelId: params.get('channel_id'),
